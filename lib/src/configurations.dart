@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 import 'package:flutter/material.dart';
-import 'package:flutter_typeahead_web/flutter_typeahead.dart';
+import 'package:flutter_typeahead/flutter_typeahead.dart';
 
 ///
 class SuggestionConfiguration {
@@ -185,7 +185,7 @@ class ChipConfiguration {
     this.materialTapTargetSize,
     this.elevation,
     this.shadowColor,
-  });
+  }) : assert(label is Text);
 }
 
 ///

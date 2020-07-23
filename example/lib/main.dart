@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_syntax_view/flutter_syntax_view.dart';
 import 'package:flutter_tagging/flutter_tagging.dart';
 
+//import '/Users/cindiahua/AndroidStudioProjects/flutter_tagging/lib/flutter_tagging.dart';
+
 void main() => runApp(MyApp());
 
 ///
@@ -56,6 +58,7 @@ class _MyHomePageState extends State<MyHomePage> {
             padding: const EdgeInsets.all(8.0),
             child: FlutterTagging<Language>(
               initialItems: _selectedLanguages,
+              wrapWithinTextField: true,
               textFieldConfiguration: TextFieldConfiguration(
                 decoration: InputDecoration(
                   border: InputBorder.none,
@@ -71,10 +74,6 @@ class _MyHomePageState extends State<MyHomePage> {
                   name: value,
                   position: 0,
                 );
-              },
-              onAdded: (language) {
-                // api calls here, triggered when add to tag button is pressed
-                return Language();
               },
               configureSuggestion: (lang) {
                 return SuggestionConfiguration(

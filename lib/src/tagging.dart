@@ -4,8 +4,10 @@
 
 import 'dart:async';
 
+import 'package:extended_text_field/extended_text_field.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_typeahead_web/flutter_typeahead.dart';
+import 'package:flutter_tagging/src/custom_widget_span_builder.dart';
+import 'package:flutter_typeahead/flutter_typeahead.dart';
 
 import 'configurations.dart';
 import 'taggable.dart';
@@ -132,6 +134,12 @@ class FlutterTagging<T extends Taggable> extends StatefulWidget {
   ///
   final List<T> initialItems;
 
+  ///
+  final bool wrapWithinTextField;
+
+  ///
+  final SpecialTextSpanBuilder specialTextSpanBuilder;
+
   /// Creates a [FlutterTagging] widget.
   FlutterTagging({
     @required this.initialItems,
@@ -155,6 +163,8 @@ class FlutterTagging<T extends Taggable> extends StatefulWidget {
     this.animationDuration = const Duration(milliseconds: 500),
     this.animationStart = 0.25,
     this.onAdded,
+    this.wrapWithinTextField = false,
+    this.specialTextSpanBuilder,
   })  : assert(initialItems != null),
         assert(findSuggestions != null),
         assert(configureChip != null),
@@ -169,6 +179,9 @@ class _FlutterTaggingState<T extends Taggable>
   TextEditingController _textController;
   FocusNode _focusNode;
   T _additionItem;
+  SpecialTextSpanBuilder _specialTextSpanBuilder;
+  List<String> _chosenTags = [];
+  String stringTags = '';
 
   @override
   void initState() {
@@ -176,6 +189,37 @@ class _FlutterTaggingState<T extends Taggable>
     _textController =
         widget.textFieldConfiguration.controller ?? TextEditingController();
     _focusNode = widget.textFieldConfiguration.focusNode ?? FocusNode();
+    _specialTextSpanBuilder = widget.specialTextSpanBuilder ?? CustomSpanBuilder(_textController, context,
+    onDelete: () {
+      print('delete');
+      //_textController.clear();
+      print('text: ${_textController.value.text}');
+      List splitText = _textController.value.text.split((' '));
+      print('split text: $splitText');
+      for (int i = 0; i < _chosenTags.length; i++) {
+        if (_chosenTags[i] != splitText[i]) {
+          print('removed: ${_chosenTags[i]}');
+          setState(() {
+            _chosenTags.removeAt(i);
+            widget.initialItems.removeAt(i);
+            for (var tag in _chosenTags) {
+              stringTags += '$tag ';
+            }
+            print('stringItems: $stringTags');
+            print('initialItems: ${widget.initialItems}');
+          });
+          break;
+        }
+      }
+      if (_focusNode.hasFocus) {
+        print('focus is focused on textfield?');
+       // _focusNode.unfocus();
+      }
+
+      if (widget.onChanged != null) {
+        widget.onChanged();
+      }
+    });
   }
 
   @override
@@ -187,12 +231,39 @@ class _FlutterTaggingState<T extends Taggable>
 
   @override
   Widget build(BuildContext context) {
+    stringTags = '';
+    if (widget.wrapWithinTextField) {
+      _chosenTags = widget.initialItems.map<String>( //make string list of item names
+              (item) {
+            var conf = widget.configureChip(item);
+            return (conf.label as Text).data;
+          }).toList();
+
+
+      for (var tag in _chosenTags) {
+        stringTags += '$tag ';
+      }
+      print('stringItems: $stringTags');
+
+      _textController.value = TextEditingValue(
+        text: stringTags,
+        selection: TextSelection.fromPosition(
+          TextPosition(offset: stringTags.length),
+        ),
+      );
+
+      print('text: ${_textController.value.text}');
+      List splitText = _textController.value.text.split((' '));
+      print('split text: $splitText');
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
         TypeAheadField<T>(
           getImmediateSuggestions: widget.enableImmediateSuggestion,
+          specialTextSpanBuilder: widget.wrapWithinTextField ? _specialTextSpanBuilder : null,
           debounceDuration: widget.debounceDuration,
           hideOnEmpty: widget.hideOnEmpty,
           hideOnError: widget.hideOnError,
@@ -229,10 +300,21 @@ class _FlutterTaggingState<T extends Taggable>
             enabled: widget.textFieldConfiguration.enabled,
           ),
           suggestionsCallback: (query) async {
-            var suggestions = await widget.findSuggestions(query);
+            String cleanedQuery = query;
+            try {
+              cleanedQuery = query.substring(stringTags.length);
+            } catch (e) {
+              if (stringTags.length > query.length) {
+                cleanedQuery = '';
+              } else {
+                cleanedQuery = query;
+              }
+            }
+//            stringTags.length != 0 ? query.substring(stringTags.length) : query;
+            var suggestions = await widget.findSuggestions(cleanedQuery);
             suggestions.removeWhere(widget.initialItems.contains);
-            if (widget.additionCallback != null && query.isNotEmpty) {
-              var additionItem = widget.additionCallback(query);
+            if (widget.additionCallback != null && cleanedQuery.isNotEmpty) {
+              var additionItem = widget.additionCallback(cleanedQuery);
               if (!suggestions.contains(additionItem) &&
                   !widget.initialItems.contains(additionItem)) {
                 _additionItem = additionItem;
@@ -293,7 +375,7 @@ class _FlutterTaggingState<T extends Taggable>
             }
           },
         ),
-        Wrap(
+        widget.wrapWithinTextField? Container() : Wrap(
           alignment: widget.wrapConfiguration.alignment,
           crossAxisAlignment: widget.wrapConfiguration.crossAxisAlignment,
           runAlignment: widget.wrapConfiguration.runAlignment,
