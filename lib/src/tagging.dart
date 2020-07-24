@@ -239,6 +239,7 @@ class _FlutterTaggingState<T extends Taggable>
   Widget build(BuildContext context) {
     stringTags = '';
     if (widget.wrapWithinTextField) {
+      //every build create _chosen tags again? is this desired behavior?
       _chosenTags = widget.initialItems.map<String>( //make string list of item names
               (item) {
             var conf = widget.configureChip(item);
@@ -320,7 +321,7 @@ class _FlutterTaggingState<T extends Taggable>
             var suggestions = await widget.findSuggestions(cleanedQuery);
             suggestions.removeWhere(widget.initialItems.contains);
             if (widget.additionCallback != null && cleanedQuery.isNotEmpty) {
-              var additionItem = widget.additionCallback(cleanedQuery);
+              var additionItem = widget.additionCallback(cleanedQuery.trimRight());
               if (!suggestions.contains(additionItem) &&
                   !widget.initialItems.contains(additionItem)) {
                 //if within textfield: check if addition item ends in space, if so add it to initial items
