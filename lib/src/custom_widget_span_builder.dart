@@ -59,10 +59,8 @@ class CustomWidgetText extends SpecialText {
 
   @override
   InlineSpan finishText() {
-    print('creating special text?');
     final String text = toString();
     //onTextFinished(text);
-
     return ExtendedWidgetSpan(
       actualText: text,
       start: start,
@@ -73,14 +71,14 @@ class CustomWidgetText extends SpecialText {
             borderRadius: const BorderRadius.all(Radius.circular(5.0)),
             child: Container(
               padding: const EdgeInsets.all(5.0),
-              color: Colors.orange,
+              color: Theme.of(context).primaryColor,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
                   Text(
                     text.trim(),
-                    //style: textStyle?.copyWith(color: Colors.orange),
+                    style: textStyle,
                   ),
                   const SizedBox(
                     width: 5.0,

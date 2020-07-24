@@ -192,28 +192,40 @@ class _FlutterTaggingState<T extends Taggable>
     _specialTextSpanBuilder = widget.specialTextSpanBuilder ?? CustomSpanBuilder(
         _textController,
         context,
-      onDelete: () {
-        print('delete');
-        print('text: ${_textController.value.text}');
-        List splitText = _textController.value.text.split((' '));
-        print('split text: $splitText');
-        for (int i = 0; i < _chosenTags.length; i++) {
-          if (_chosenTags[i] != splitText[i]) {
-            print('removed: ${_chosenTags[i]}');
-            setState(() {
-              _chosenTags.removeAt(i);
-              widget.initialItems.removeAt(i);
-              print('initialItems: ${widget.initialItems}');
-            });
-            break;
-          }
-        }
-
-        if (widget.onChanged != null) {
-          widget.onChanged();
-        }
-      }
+      onDelete: _deleteTag
     );
+  }
+
+  void _deleteTag() {
+    print('DELETING');
+    print('text: ${_textController.value.text}');
+    List splitText = _textController.value.text.split((' '));
+    splitText.removeWhere((element) => element == ' ');
+    //print('split text: $splitText compare with ${_chosenTags}');
+    for (int i = 0; i < _chosenTags.length; i++) {
+      if (_chosenTags[i] != splitText[i]) {
+        print('compare ${_chosenTags[i]} with ${splitText[i]}');
+        print('removed: ${_chosenTags[i]} from lists');
+        setState(() {
+          _chosenTags.removeAt(i);
+          widget.initialItems.removeAt(i);
+        });
+        break;
+      }
+    }
+
+    if (widget.onChanged != null) {
+      widget.onChanged();
+    }
+  }
+
+  //called whenever user initiates change to textfield
+  _onTextChange(String text) {
+    if (widget.wrapWithinTextField) {
+      if (text.length < stringTags.length) {
+        _deleteTag(); //deletes when user presses backspace
+      }
+    }
   }
 
   @override
@@ -245,9 +257,9 @@ class _FlutterTaggingState<T extends Taggable>
         ),
       );
 
-      print('text: ${_textController.value.text}');
+      print('textfield text: ${_textController.value.text}');
       List splitText = _textController.value.text.split((' '));
-      print('split text: $splitText');
+      print('textfield split text: $splitText');
     }
 
     return Column(
@@ -291,6 +303,7 @@ class _FlutterTaggingState<T extends Taggable>
             focusNode: _focusNode,
             controller: _textController,
             enabled: widget.textFieldConfiguration.enabled,
+            onChanged: (text) => _onTextChange(text),
           ),
           suggestionsCallback: (query) async {
             String cleanedQuery = query;
