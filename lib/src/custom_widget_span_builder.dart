@@ -23,16 +23,16 @@ class CustomSpanBuilder extends SpecialTextSpanBuilder {
     if (flag == null || flag == '') {
       return null;
     }
-
-    if (!flag.startsWith(' ')) {
-      return CustomWidgetText(textStyle, onTap,
+      //do we need to check for a space before the word?
+      return CustomWidgetText(
+        textStyle,
+        onTap,
           start: index,
           context: context,
           controller: controller,
           startFlag: flag,
           onDelete: onDelete,
       );
-    }
     return null;
   }
 }
@@ -59,6 +59,7 @@ class CustomWidgetText extends SpecialText {
 
   @override
   InlineSpan finishText() {
+    print('creating special text?');
     final String text = toString();
     //onTextFinished(text);
 

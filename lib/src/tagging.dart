@@ -189,37 +189,31 @@ class _FlutterTaggingState<T extends Taggable>
     _textController =
         widget.textFieldConfiguration.controller ?? TextEditingController();
     _focusNode = widget.textFieldConfiguration.focusNode ?? FocusNode();
-    _specialTextSpanBuilder = widget.specialTextSpanBuilder ?? CustomSpanBuilder(_textController, context,
-    onDelete: () {
-      print('delete');
-      //_textController.clear();
-      print('text: ${_textController.value.text}');
-      List splitText = _textController.value.text.split((' '));
-      print('split text: $splitText');
-      for (int i = 0; i < _chosenTags.length; i++) {
-        if (_chosenTags[i] != splitText[i]) {
-          print('removed: ${_chosenTags[i]}');
-          setState(() {
-            _chosenTags.removeAt(i);
-            widget.initialItems.removeAt(i);
-            for (var tag in _chosenTags) {
-              stringTags += '$tag ';
-            }
-            print('stringItems: $stringTags');
-            print('initialItems: ${widget.initialItems}');
-          });
-          break;
+    _specialTextSpanBuilder = widget.specialTextSpanBuilder ?? CustomSpanBuilder(
+        _textController,
+        context,
+      onDelete: () {
+        print('delete');
+        print('text: ${_textController.value.text}');
+        List splitText = _textController.value.text.split((' '));
+        print('split text: $splitText');
+        for (int i = 0; i < _chosenTags.length; i++) {
+          if (_chosenTags[i] != splitText[i]) {
+            print('removed: ${_chosenTags[i]}');
+            setState(() {
+              _chosenTags.removeAt(i);
+              widget.initialItems.removeAt(i);
+              print('initialItems: ${widget.initialItems}');
+            });
+            break;
+          }
+        }
+
+        if (widget.onChanged != null) {
+          widget.onChanged();
         }
       }
-      if (_focusNode.hasFocus) {
-        print('focus is focused on textfield?');
-       // _focusNode.unfocus();
-      }
-
-      if (widget.onChanged != null) {
-        widget.onChanged();
-      }
-    });
+    );
   }
 
   @override
@@ -239,14 +233,13 @@ class _FlutterTaggingState<T extends Taggable>
             return (conf.label as Text).data;
           }).toList();
 
-
       for (var tag in _chosenTags) {
         stringTags += '$tag ';
       }
-      print('stringItems: $stringTags');
+      print('tags as a string: $stringTags');
 
       _textController.value = TextEditingValue(
-        text: stringTags,
+        text: stringTags, //sets the text in the textfield to be the string of the tags
         selection: TextSelection.fromPosition(
           TextPosition(offset: stringTags.length),
         ),
@@ -302,23 +295,33 @@ class _FlutterTaggingState<T extends Taggable>
           suggestionsCallback: (query) async {
             String cleanedQuery = query;
             try {
-              cleanedQuery = query.substring(stringTags.length);
+              cleanedQuery = query.substring(stringTags.length); //attempt to not search for tags within textfield
             } catch (e) {
               if (stringTags.length > query.length) {
-                cleanedQuery = '';
+                cleanedQuery = ''; //if a tag was removed, stringTags is not yet updated, just set search to ''
               } else {
                 cleanedQuery = query;
               }
             }
-//            stringTags.length != 0 ? query.substring(stringTags.length) : query;
+            print('cleaned query: $cleanedQuery');
             var suggestions = await widget.findSuggestions(cleanedQuery);
             suggestions.removeWhere(widget.initialItems.contains);
             if (widget.additionCallback != null && cleanedQuery.isNotEmpty) {
               var additionItem = widget.additionCallback(cleanedQuery);
               if (!suggestions.contains(additionItem) &&
                   !widget.initialItems.contains(additionItem)) {
-                _additionItem = additionItem;
-                suggestions.insert(0, additionItem);
+                //if within textfield: check if addition item ends in space, if so add it to initial items
+                if (widget.wrapWithinTextField && cleanedQuery.endsWith(' ')) {
+                  setState(() {
+                    widget.initialItems.add(additionItem);
+                  });
+                  if (widget.onChanged != null) {
+                    widget.onChanged();
+                  }
+                } else {
+                  _additionItem = additionItem;
+                  suggestions.insert(0, additionItem);
+                }
               } else {
                 _additionItem = null;
               }
@@ -337,7 +340,7 @@ class _FlutterTaggingState<T extends Taggable>
                 borderRadius: conf.splashRadius,
                 onTap: () async {
                   if (widget.onAdded != null) {
-                    var _item = await widget.onAdded(item);
+                    var _item = await widget.onAdded(item); //so onAdded method must return the item?
                     if (_item != null) {
                       widget.initialItems.add(_item);
                     }

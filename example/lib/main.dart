@@ -75,6 +75,10 @@ class _MyHomePageState extends State<MyHomePage> {
                   position: 0,
                 );
               },
+              onAdded: (lang) {
+                print('onAdded method called');
+                return lang;
+              },
               configureSuggestion: (lang) {
                 return SuggestionConfiguration(
                   title: Text(lang.name),
