@@ -188,6 +188,22 @@ class ChipConfiguration {
   }) : assert(label is Text);
 }
 
+class TagConfiguration {
+  final TextStyle textStyle;
+
+  final Color tagColor;
+
+  final BorderRadius borderRadius;
+
+  final Icon closeIcon;
+
+  final Color closeIconColor;
+
+  final EdgeInsets padding;
+
+  TagConfiguration({this.textStyle, this.tagColor, this.borderRadius, this.closeIcon, this.padding, this.closeIconColor});
+}
+
 ///
 class WrapConfiguration {
   /// The direction to use as the main axis.

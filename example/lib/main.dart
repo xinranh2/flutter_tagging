@@ -68,6 +68,12 @@ class _MyHomePageState extends State<MyHomePage> {
                   labelText: 'Select Tags',
                 ),
               ),
+              infieldTagConfiguration: TagConfiguration(
+                textStyle: TextStyle(
+                  color: Colors.white,
+                ),
+                closeIconColor: Colors.white,
+              ),
               findSuggestions: LanguageService.getLanguages,
               additionCallback: (value) {
                 return Language(

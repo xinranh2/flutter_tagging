@@ -50,7 +50,7 @@ class FlutterTagging<T extends Taggable> extends StatefulWidget {
 
   /// Defines an object for search pattern.
   ///
-  /// If null, tag addition feature is disabled.
+  /// If null, tag addition feature is disabled. CANNOT be null for our purposes
   final T Function(String) additionCallback;
 
   /// Called when add to tag button is pressed.
@@ -140,6 +140,8 @@ class FlutterTagging<T extends Taggable> extends StatefulWidget {
   ///
   final SpecialTextSpanBuilder specialTextSpanBuilder;
 
+  final TagConfiguration infieldTagConfiguration;
+
   /// Creates a [FlutterTagging] widget.
   FlutterTagging({
     @required this.initialItems,
@@ -147,7 +149,7 @@ class FlutterTagging<T extends Taggable> extends StatefulWidget {
     @required this.configureChip,
     @required this.configureSuggestion,
     this.onChanged,
-    this.additionCallback,
+    this.additionCallback, //need this for wrapping tags in text field
     this.enableImmediateSuggestion = false,
     this.errorBuilder,
     this.loadingBuilder,
@@ -165,10 +167,13 @@ class FlutterTagging<T extends Taggable> extends StatefulWidget {
     this.onAdded,
     this.wrapWithinTextField = false,
     this.specialTextSpanBuilder,
+    this.infieldTagConfiguration, //must not be null if wrapping tags in text field
   })  : assert(initialItems != null),
         assert(findSuggestions != null),
         assert(configureChip != null),
-        assert(configureSuggestion != null);
+        assert(configureSuggestion != null),
+        assert(!wrapWithinTextField || (wrapWithinTextField && additionCallback != null)),
+        assert(!wrapWithinTextField || (wrapWithinTextField && infieldTagConfiguration != null));
 
   @override
   _FlutterTaggingState<T> createState() => _FlutterTaggingState<T>();
@@ -188,12 +193,19 @@ class _FlutterTaggingState<T extends Taggable>
     super.initState();
     _textController =
         widget.textFieldConfiguration.controller ?? TextEditingController();
+    _textController.addListener(_setCursorBack);
     _focusNode = widget.textFieldConfiguration.focusNode ?? FocusNode();
     _specialTextSpanBuilder = widget.specialTextSpanBuilder ?? CustomSpanBuilder(
         _textController,
         context,
-      onDelete: _deleteTag
+      onDelete: _deleteTag,
+      tagConfiguration: widget.infieldTagConfiguration,
     );
+  }
+
+  _setCursorBack() {
+    _textController.selection = TextSelection.fromPosition(
+        TextPosition(offset: _textController.text.length));
   }
 
   void _deleteTag() {
@@ -221,10 +233,8 @@ class _FlutterTaggingState<T extends Taggable>
 
   //called whenever user initiates change to textfield
   _onTextChange(String text) {
-    if (widget.wrapWithinTextField) {
-      if (text.length < stringTags.length) {
-        _deleteTag(); //deletes when user presses backspace
-      }
+    if (text.length < stringTags.length) {
+      _deleteTag(); //deletes when user presses backspace
     }
   }
 
@@ -304,7 +314,8 @@ class _FlutterTaggingState<T extends Taggable>
             focusNode: _focusNode,
             controller: _textController,
             enabled: widget.textFieldConfiguration.enabled,
-            onChanged: (text) => _onTextChange(text),
+            onChanged: widget.wrapWithinTextField ? (text) => _onTextChange(text) : widget.textFieldConfiguration.onChanged,
+            enableInteractiveSelection: false,
           ),
           suggestionsCallback: (query) async {
             String cleanedQuery = query;
@@ -326,12 +337,20 @@ class _FlutterTaggingState<T extends Taggable>
                   !widget.initialItems.contains(additionItem)) {
                 //if within textfield: check if addition item ends in space, if so add it to initial items
                 if (widget.wrapWithinTextField && cleanedQuery.endsWith(' ')) {
-                  setState(() {
+                  //if we want to remove the items in the suggestion box that have the same name as what is typed:
+                  //code would be here
+                  if (widget.onAdded != null) {
+                    var _item = await widget.onAdded(additionItem); //so onAdded method must return the item?
+                    if (_item != null) {
+                      widget.initialItems.add(_item);
+                    }
+                  } else {
                     widget.initialItems.add(additionItem);
-                  });
+                  }
                   if (widget.onChanged != null) {
                     widget.onChanged();
                   }
+                  setState(() {});
                 } else {
                   _additionItem = additionItem;
                   suggestions.insert(0, additionItem);

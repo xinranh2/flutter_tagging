@@ -1,4 +1,5 @@
 import 'package:extended_text_library/extended_text_library.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'dart:ui' as ui show PlaceholderAlignment;
 
@@ -7,14 +8,15 @@ import 'package:flutter_tagging/flutter_tagging.dart';
 
 ///
 class CustomSpanBuilder extends SpecialTextSpanBuilder {
-  CustomSpanBuilder(this.controller, this.context,{this.chipConfiguration, this.onDelete});
+  CustomSpanBuilder(this.controller, this.context,{@required this.tagConfiguration, this.onDelete});
 
   final TextEditingController controller;
   final BuildContext context;
 
   //use to create inline widget
-  final ChipConfiguration chipConfiguration;
+  final TagConfiguration tagConfiguration;
 
+  ///when the close icon is clicked
   final onDelete;
 
   @override
@@ -32,6 +34,7 @@ class CustomSpanBuilder extends SpecialTextSpanBuilder {
           controller: controller,
           startFlag: flag,
           onDelete: onDelete,
+          tagConfiguration: tagConfiguration,
       );
     return null;
   }
@@ -43,7 +46,8 @@ class CustomWidgetText extends SpecialText {
         this.controller,
         this.context,
         String startFlag,
-        this.onDelete,
+        @required this.onDelete,
+        @required this.tagConfiguration,
       })
       : super(startFlag, ' ', textStyle, onTap: onTap);
 
@@ -51,6 +55,7 @@ class CustomWidgetText extends SpecialText {
   final int start;
   final BuildContext context;
   final onDelete;
+  final TagConfiguration tagConfiguration;
 
   @override
   bool isEnd(String value) {
@@ -60,7 +65,6 @@ class CustomWidgetText extends SpecialText {
   @override
   InlineSpan finishText() {
     final String text = toString();
-    //onTextFinished(text);
     return ExtendedWidgetSpan(
       actualText: text,
       start: start,
@@ -68,25 +72,26 @@ class CustomWidgetText extends SpecialText {
       child: Padding(
         padding: const EdgeInsets.only(right: 5.0, top: 2.0, bottom: 2.0),
         child: ClipRRect(
-            borderRadius: const BorderRadius.all(Radius.circular(5.0)),
+            borderRadius: tagConfiguration.borderRadius ?? const BorderRadius.all(Radius.circular(5.0)),
             child: Container(
-              padding: const EdgeInsets.all(5.0),
-              color: Theme.of(context).primaryColor,
+              padding: tagConfiguration.padding ?? const EdgeInsets.all(5.0),
+              color: tagConfiguration.tagColor ?? Theme.of(context).primaryColor,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
                   Text(
                     text.trim(),
-                    style: textStyle,
+                    style: tagConfiguration.textStyle ?? textStyle,
                   ),
                   const SizedBox(
                     width: 5.0,
                   ),
                   InkWell(
-                    child: Icon(
+                    child: tagConfiguration.closeIcon ?? Icon(
                       Icons.close,
                       size: 15.0,
+                      color: tagConfiguration.closeIconColor ?? Colors.black,
                     ),
                     onTap: () {
                       controller.value = controller.value.copyWith(
