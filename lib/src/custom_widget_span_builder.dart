@@ -6,7 +6,7 @@ import 'dart:ui' as ui show PlaceholderAlignment;
 import 'package:flutter_tagging/flutter_tagging.dart';
 
 
-///
+///Custom made span builder for my purposes. Has function of deleting the widget
 class CustomSpanBuilder extends SpecialTextSpanBuilder {
   CustomSpanBuilder(this.controller, this.context,{@required this.tagConfiguration, this.onDelete});
 
@@ -36,7 +36,6 @@ class CustomSpanBuilder extends SpecialTextSpanBuilder {
           onDelete: onDelete,
           tagConfiguration: tagConfiguration,
       );
-    return null;
   }
 }
 
@@ -70,11 +69,11 @@ class CustomWidgetText extends SpecialText {
       start: start,
       alignment: ui.PlaceholderAlignment.middle,
       child: Padding(
-        padding: const EdgeInsets.only(right: 5.0, top: 2.0, bottom: 2.0),
+        padding: tagConfiguration.tagPadding ?? const EdgeInsets.only(right: 5.0, top: 2.0, bottom: 2.0),
         child: ClipRRect(
             borderRadius: tagConfiguration.borderRadius ?? const BorderRadius.all(Radius.circular(5.0)),
             child: Container(
-              padding: tagConfiguration.padding ?? const EdgeInsets.all(5.0),
+              padding: tagConfiguration.textPadding ?? const EdgeInsets.all(5.0),
               color: tagConfiguration.tagColor ?? Theme.of(context).primaryColor,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,

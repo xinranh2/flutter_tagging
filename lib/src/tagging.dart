@@ -134,12 +134,13 @@ class FlutterTagging<T extends Taggable> extends StatefulWidget {
   ///
   final List<T> initialItems;
 
-  ///
+  ///flag for whether tags will show up inside the search bar or not
   final bool wrapWithinTextField;
 
-  ///
+  ///needed for when tags are inside the search bar
   final SpecialTextSpanBuilder specialTextSpanBuilder;
 
+  ///configuration for tags that are inside the search bar
   final TagConfiguration infieldTagConfiguration;
 
   /// Creates a [FlutterTagging] widget.
@@ -203,21 +204,20 @@ class _FlutterTaggingState<T extends Taggable>
     );
   }
 
+  ///listens to all activity to text field and prevents user from clicking anywhere inside text
   _setCursorBack() {
     _textController.selection = TextSelection.fromPosition(
         TextPosition(offset: _textController.text.length));
   }
 
+  ///removes where the textfield's text differs from the widget's array BUT ONLY THE FIRST THING THAT DIFFERS....
   void _deleteTag() {
-    print('DELETING');
-    print('text: ${_textController.value.text}');
     List splitText = _textController.value.text.split((' '));
     splitText.removeWhere((element) => element == ' ');
     //print('split text: $splitText compare with ${_chosenTags}');
     for (int i = 0; i < _chosenTags.length; i++) {
       if (_chosenTags[i] != splitText[i]) {
-        print('compare ${_chosenTags[i]} with ${splitText[i]}');
-        print('removed: ${_chosenTags[i]} from lists');
+        //this might be an error area
         setState(() {
           _chosenTags.removeAt(i);
           widget.initialItems.removeAt(i);
@@ -248,8 +248,10 @@ class _FlutterTaggingState<T extends Taggable>
   @override
   Widget build(BuildContext context) {
     stringTags = '';
+
+    //if we are putting the tags inside the textfield, we want to update the string array every build
+    //and update the textfield's text based on that string array
     if (widget.wrapWithinTextField) {
-      //every build create _chosen tags again? is this desired behavior?
       _chosenTags = widget.initialItems.map<String>( //make string list of item names
               (item) {
             var conf = widget.configureChip(item);
@@ -259,7 +261,6 @@ class _FlutterTaggingState<T extends Taggable>
       for (var tag in _chosenTags) {
         stringTags += '$tag ';
       }
-      print('tags as a string: $stringTags');
 
       _textController.value = TextEditingValue(
         text: stringTags, //sets the text in the textfield to be the string of the tags
@@ -267,10 +268,6 @@ class _FlutterTaggingState<T extends Taggable>
           TextPosition(offset: stringTags.length),
         ),
       );
-
-      print('textfield text: ${_textController.value.text}');
-      List splitText = _textController.value.text.split((' '));
-      print('textfield split text: $splitText');
     }
 
     return Column(
@@ -315,7 +312,6 @@ class _FlutterTaggingState<T extends Taggable>
             controller: _textController,
             enabled: widget.textFieldConfiguration.enabled,
             onChanged: widget.wrapWithinTextField ? (text) => _onTextChange(text) : widget.textFieldConfiguration.onChanged,
-            enableInteractiveSelection: false,
           ),
           suggestionsCallback: (query) async {
             String cleanedQuery = query;
@@ -328,7 +324,6 @@ class _FlutterTaggingState<T extends Taggable>
                 cleanedQuery = query;
               }
             }
-            print('cleaned query: $cleanedQuery');
             var suggestions = await widget.findSuggestions(cleanedQuery);
             suggestions.removeWhere(widget.initialItems.contains);
             if (widget.additionCallback != null && cleanedQuery.isNotEmpty) {

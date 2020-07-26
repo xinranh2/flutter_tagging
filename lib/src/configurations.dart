@@ -188,6 +188,7 @@ class ChipConfiguration {
   }) : assert(label is Text);
 }
 
+///configuration for the tags that are inside the textfield
 class TagConfiguration {
   final TextStyle textStyle;
 
@@ -199,9 +200,11 @@ class TagConfiguration {
 
   final Color closeIconColor;
 
-  final EdgeInsets padding;
+  final EdgeInsets textPadding;
 
-  TagConfiguration({this.textStyle, this.tagColor, this.borderRadius, this.closeIcon, this.padding, this.closeIconColor});
+  final EdgeInsets tagPadding;
+
+  TagConfiguration({this.textStyle, this.tagColor, this.borderRadius, this.closeIcon, this.textPadding, this.closeIconColor, this.tagPadding});
 }
 
 ///
