@@ -205,6 +205,17 @@ class TagConfiguration {
   final EdgeInsets tagPadding;
 
   TagConfiguration({this.textStyle, this.tagColor, this.borderRadius, this.closeIcon, this.textPadding, this.closeIconColor, this.tagPadding});
+  copyWith({TextStyle textStyle, Color tagColor, BorderRadius borderRadius, Icon closeIcon, Color closeIconColor, EdgeInsets textPadding, EdgeInsets tagPadding}) {
+    return TagConfiguration(
+      textStyle: textStyle ?? this.textStyle,
+      tagColor: tagColor ?? this.tagColor,
+      borderRadius: borderRadius ?? this.borderRadius,
+      closeIcon: closeIcon ?? this.closeIcon,
+      closeIconColor: closeIconColor ?? this.closeIconColor,
+      textPadding: textPadding ?? this.textPadding,
+      tagPadding: tagPadding ?? this.tagPadding,
+    );
+  }
 }
 
 ///
