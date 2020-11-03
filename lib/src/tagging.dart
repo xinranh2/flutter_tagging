@@ -145,7 +145,6 @@ class FlutterTagging<T extends Taggable> extends StatefulWidget {
 
   /// the tag's text padding that needs to be adjusted for
   final double tagTextPadding;
-  double currentTextPadding = 0;
 
   /// Creates a [FlutterTagging] widget.
   FlutterTagging({
@@ -195,10 +194,12 @@ class _FlutterTaggingState<T extends Taggable>
   SpecialTextSpanBuilder _specialTextSpanBuilder;
   List<String> _chosenTags = [];
   String stringTags = '';
+  double currentTextPadding = 0;
 
   @override
   void initState() {
     super.initState();
+    currentTextPadding = 0.0;
     _textController =
         widget.textFieldConfiguration.controller ?? TextEditingController();
     _textController.addListener(_setCursorBack);
@@ -320,14 +321,18 @@ class _FlutterTaggingState<T extends Taggable>
               ),
           noItemsFoundBuilder: widget.emptyBuilder,
           textFieldConfiguration: widget.textFieldConfiguration.copyWith(
-            decoration: widget.wrapWithinTextField ? widget.textFieldConfiguration.decoration.copyWith(
+            decoration://widget.wrapWithinTextField ?
+            widget.textFieldConfiguration.decoration.copyWith(
                 contentPadding: widget.textFieldConfiguration.decoration.contentPadding.subtract(EdgeInsets.fromLTRB(
-                    0, widget.currentTextPadding, 0, widget.currentTextPadding),)
-            ) : widget.textFieldConfiguration.decoration,
+                    0, currentTextPadding, 0, currentTextPadding),)
+            ), //: widget.textFieldConfiguration.decoration,
             focusNode: _focusNode,
             controller: _textController,
             enabled: widget.textFieldConfiguration.enabled,
-            onChanged: widget.wrapWithinTextField ? (text) => _onTextChange(text) : widget.textFieldConfiguration.onChanged,
+            onChanged: widget.wrapWithinTextField ? (text) {
+              _onTextChange(text);
+              print(widget.textFieldConfiguration.decoration);
+            } : widget.textFieldConfiguration.onChanged,
           ),
           suggestionsCallback: (query) async {
             String cleanedQuery = query;
@@ -350,7 +355,6 @@ class _FlutterTaggingState<T extends Taggable>
                 if (widget.wrapWithinTextField && cleanedQuery.endsWith(' ')) {
                   //if we want to remove the items in the suggestion box that have the same name as what is typed:
                   //code would be here
-                  adjustContentPadding();
                   if (widget.onAdded != null) {
                     var _item = await widget.onAdded(additionItem); //so onAdded method must return the item?
                     if (_item != null) {
@@ -362,7 +366,8 @@ class _FlutterTaggingState<T extends Taggable>
                   if (widget.onChanged != null) {
                     widget.onChanged();
                   }
-                  setState(() {});
+                  adjustContentPadding();
+                  //setState(() {});
                 } else {
                   _additionItem = additionItem;
                   suggestions.insert(0, additionItem);
@@ -473,11 +478,11 @@ class _FlutterTaggingState<T extends Taggable>
   void adjustContentPadding() {
     if (widget.initialItems.isNotEmpty) {
       setState(() {
-        widget.currentTextPadding = 5;
+        currentTextPadding = widget.tagTextPadding;
       }); //to adjust textfield content padding
     } else {
       setState(() {
-        widget.currentTextPadding = 0;
+        currentTextPadding = 0;
       });
     }
   }
